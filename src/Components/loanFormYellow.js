@@ -7,7 +7,23 @@ const LoanFormYellow = () => {
     name: "",
     email: "",
     bname: "",
+    provider: "",
+    lamount: "",
+    phone: "",
+    yearStarted: "",
   });
+
+  const currentYear = new Date().getFullYear();
+  const yearRange = 10; // Change this to adjust the range of years
+
+  const yearOptions = [];
+  for (let i = currentYear; i >= currentYear - yearRange; i--) {
+    yearOptions.push(
+      <option key={i} value={i}>
+        {i}
+      </option>
+    );
+  }
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -29,6 +45,7 @@ const LoanFormYellow = () => {
     const data = await response.json();
     setResponse(data);
 
+    console.log(formData);
     console.log(data);
   };
   return (
@@ -50,26 +67,54 @@ const LoanFormYellow = () => {
                     placeholder="Name"
                     onChange={handleInputChange}
                     name="name"
+                    disabled={response ? "disabled" : ""}
                     className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
                   />
                   <input
                     placeholder="Email"
                     name="email"
                     onChange={handleInputChange}
+                    disabled={response ? "disabled" : ""}
                     className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
                   />
                   <input
                     placeholder="Business Name"
                     name="bname"
                     onChange={handleInputChange}
+                    disabled={response ? "disabled" : ""}
                     className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
                   />
+                  <div className="flex">
+                    <div className="flex-grow w-1/4 pr-2">
+                      <input
+                        name="phone"
+                        placeholder="Phone"
+                        disabled={response ? "disabled" : ""}
+                        onChange={handleInputChange}
+                        className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
+                      />
+                    </div>
+                    <div className="flex-grow ">
+                      <select
+                        name="yearStarted"
+                        onChange={handleInputChange}
+                        id="yearStarted"
+                        defaultValue={response ? formData.provider : ""}
+                        disabled={response ? "disabled" : ""}
+                        className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
+                      >
+                        <option value="">Year Started </option>
+                        {yearOptions}
+                      </select>
+                    </div>
+                  </div>
 
                   <div className="flex">
                     <div className="flex-grow w-1/4 pr-2">
                       <input
                         name="lamount"
                         placeholder="Loan Amount"
+                        disabled={response ? "disabled" : ""}
                         onChange={handleInputChange}
                         className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
                       />
@@ -79,14 +124,13 @@ const LoanFormYellow = () => {
                         name="provider"
                         onChange={handleInputChange}
                         id="countries"
-                        defaultValue=""
+                        defaultValue={response ? formData.provider : ""}
+                        disabled={response ? "disabled" : ""}
                         className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
                       >
-                        <option selected defaultValue="">
-                          Choose a Provider
-                        </option>
-                        <option defaultValue="Xero">Xero</option>
-                        <option defaultValue="MYOB">MYOB</option>
+                        <option value="">Choose a Provider</option>
+                        <option value="Xero">Xero</option>
+                        <option value="MYOB">MYOB</option>
                       </select>
                     </div>
                   </div>

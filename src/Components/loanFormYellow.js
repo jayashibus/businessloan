@@ -2,15 +2,23 @@ import React, { useState } from "react";
 
 const LoanFormYellow = () => {
   const [response, setResponse] = useState(null);
+  const [finalresponse, setFinalresponse] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    bname: "",
+    businessName: "",
     provider: "",
-    lamount: "",
+    loanAmount: "",
     phone: "",
-    yearStarted: "",
+    yearEstablished: "",
+  });
+
+  const [reviewData, setReviewData] = useState({
+    balanceSheet: [],
+    businessName: "",
+    yearEstablished: "",
+    loanAmount: "",
   });
 
   const currentYear = new Date().getFullYear();
@@ -45,8 +53,27 @@ const LoanFormYellow = () => {
     const data = await response.json();
     setResponse(data);
 
-    console.log(formData);
-    console.log(data);
+    const { balanceSheet, businessName, yearEstablished, loanAmount } = data;
+    setReviewData({ balanceSheet, businessName, yearEstablished, loanAmount });
+  };
+
+  const formReviewHandler = async (event) => {
+    event.preventDefault();
+    const response1 = await fetch(
+      "http://localhost:5032/api/loan-application",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reviewData),
+      }
+    );
+    const data1 = await response1.json();
+    setFinalresponse(data1);
+
+    console.log(reviewData);
+    console.log(finalresponse);
   };
   return (
     <div>
@@ -79,7 +106,7 @@ const LoanFormYellow = () => {
                   />
                   <input
                     placeholder="Business Name"
-                    name="bname"
+                    name="businessName"
                     onChange={handleInputChange}
                     disabled={response ? "disabled" : ""}
                     className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
@@ -96,9 +123,9 @@ const LoanFormYellow = () => {
                     </div>
                     <div className="flex-grow ">
                       <select
-                        name="yearStarted"
+                        name="yearEstablished"
                         onChange={handleInputChange}
-                        id="yearStarted"
+                        id="yearEstablished"
                         defaultValue={response ? formData.provider : ""}
                         disabled={response ? "disabled" : ""}
                         className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
@@ -112,7 +139,7 @@ const LoanFormYellow = () => {
                   <div className="flex">
                     <div className="flex-grow w-1/4 pr-2">
                       <input
-                        name="lamount"
+                        name="loanAmount"
                         placeholder="Loan Amount"
                         disabled={response ? "disabled" : ""}
                         onChange={handleInputChange}
@@ -156,36 +183,49 @@ const LoanFormYellow = () => {
                         ></path>
                         <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM6 6h9v4H6z"></path>
                       </svg>
-                      <span className="pl-2 mx-1" onClick={formSubmitHandler}>
-                        Submit your Application
-                      </span>
+                      {!response && (
+                        <span className="pl-2 mx-1" onClick={formSubmitHandler}>
+                          Request Balance Sheet
+                        </span>
+                      )}
+                      {response && (
+                        <span className="pl-2 mx-1" onClick={formReviewHandler}>
+                          Review
+                        </span>
+                      )}
                     </button>
                   </div>
                 </div>
               </div>
-              {response && (
+              {finalresponse && (
                 <div className="mt-5 bg-white shadow cursor-pointer rounded-xl">
                   <div className="flex">
                     <div className="flex-1 py-5 pl-5 overflow-hidden">
+                      <div className="flex-1 py-5 pl-5 overflow-hidden">
+                        <h1 className="inline text-2xl font-semibold leading-none">
+                          Outcome
+                        </h1>
+                      </div>
                       <ul>
-                        <li className="text-xs text-gray-600 uppercase ">
-                          Receiver
+                        <li className="text-xs text-gray-600 uppercase "></li>
+                        <li>
+                          Business Name : {finalresponse.decision.businessName}
                         </li>
-                        <li>Max Mustermann</li>
-                        <li>Musterstrasse 1</li>
-                        <li>4020 Linz</li>
+                        <li>
+                          Year Established :{" "}
+                          {finalresponse.decision.yearEstablished}
+                        </li>
+                        <li>
+                          Summary of Profit/Loss :{" "}
+                          {finalresponse.decision.profitOrLossSum}
+                        </li>
+                        <li>
+                          Pre Assessment :{" "}
+                          {finalresponse.decision.preAssessment}%
+                        </li>
                       </ul>
                     </div>
-                    <div className="flex-1 py-5 pl-1 overflow-hidden">
-                      <ul>
-                        <li className="text-xs text-gray-600 uppercase">
-                          Sender
-                        </li>
-                        <li>Rick Astley</li>
-                        <li>Rickrolled 11</li>
-                        <li>1000 Vienna</li>
-                      </ul>
-                    </div>
+
                     <div className="flex-none pt-2.5 pr-2.5 pl-1">
                       <button
                         type="button"

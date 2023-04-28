@@ -3,23 +3,22 @@ import React, { useState } from "react";
 const LoanFormYellow = () => {
   const [response, setResponse] = useState(null);
   const [finalresponse, setFinalresponse] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
     businessName: "",
     provider: "",
     loanAmount: "",
-    phone: "",
     yearEstablished: "",
   });
 
-  const [reviewData, setReviewData] = useState({
-    balanceSheet: [],
-    businessName: "",
-    yearEstablished: "",
-    loanAmount: "",
-  });
+  // const [reviewData, setReviewData] = useState({
+  //   balanceSheet: [],
+  //   businessName: "",
+  //   yearEstablished: "",
+  //   loanAmount: "",
+  // });
 
   const currentYear = new Date().getFullYear();
   const yearRange = 10; // Change this to adjust the range of years
@@ -41,39 +40,93 @@ const LoanFormYellow = () => {
     });
   };
 
-  const formSubmitHandler = async (event) => {
+  function formResetHandler(event) {
     event.preventDefault();
-    const response = await fetch("http://localhost:5032/api/balance-sheet", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
+    setFormData({
+      businessName: "",
+      provider: "",
+      loanAmount: "",
+      yearEstablished: "",
     });
-    const data = await response.json();
-    setResponse(data);
 
-    const { balanceSheet, businessName, yearEstablished, loanAmount } = data;
-    setReviewData({ balanceSheet, businessName, yearEstablished, loanAmount });
+    setResponse(null);
+    setFinalresponse(null);
+    setErrors({});
+  }
+
+  const validateForm = (formData) => {
+    const { businessName, yearEstablished, loanAmount, provider } = formData;
+    let errorMessage = {};
+
+    if (!provider) {
+      errorMessage.provider = "Provider is required.";
+    }
+    if (!businessName) {
+      errorMessage.businessName = "Business Name is required.";
+    }
+    if (!yearEstablished) {
+      errorMessage.yearEstablished = "Year field required.";
+    }
+    if (!loanAmount) {
+      errorMessage.loanAmount = "Loan Amount is required.";
+    }
+
+    return errorMessage;
   };
 
-  const formReviewHandler = async (event) => {
+  const formSubmitHandler = async (event) => {
     event.preventDefault();
-    const response1 = await fetch(
-      "http://localhost:5032/api/loan-application",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reviewData),
-      }
-    );
-    const data1 = await response1.json();
-    setFinalresponse(data1);
+    const errorMessage = validateForm(formData);
 
-    console.log(reviewData);
-    console.log(finalresponse);
+    if (Object.keys(errorMessage).length === 0) {
+      setErrors({});
+      // Handle form submission
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(
+          "http://localhost:5032/api/balance-sheet",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
+
+        const data = await response.json();
+        setResponse(data);
+
+        // const { balanceSheet, businessName, yearEstablished, loanAmount } = data;
+        // setReviewData({
+        //   balanceSheet,
+        //   businessName,
+        //   yearEstablished,
+        //   loanAmount,
+        // });
+
+        const response1 = await fetch(
+          "http://localhost:5032/api/loan-application",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          }
+        );
+
+        const data1 = await response1.json();
+        setFinalresponse(data1);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setErrors(errorMessage);
+    }
   };
   return (
     <div>
@@ -91,66 +144,60 @@ const LoanFormYellow = () => {
                 </div>
                 <div className="px-5 pb-5">
                   <input
-                    placeholder="Name"
-                    onChange={handleInputChange}
-                    name="name"
-                    disabled={response ? "disabled" : ""}
-                    className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                  />
-                  <input
-                    placeholder="Email"
-                    name="email"
-                    onChange={handleInputChange}
-                    disabled={response ? "disabled" : ""}
-                    className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                  />
-                  <input
                     placeholder="Business Name"
                     name="businessName"
                     onChange={handleInputChange}
                     disabled={response ? "disabled" : ""}
+                    value={formData.businessName}
+                    className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400 "
+                  />
+                  {errors.businessName && (
+                    <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                      {errors.businessName}
+                    </span>
+                  )}
+
+                  <input
+                    type="number"
+                    name="loanAmount"
+                    placeholder="Loan Amount"
+                    disabled={response ? "disabled" : ""}
+                    onChange={handleInputChange}
+                    value={formData.loanAmount}
                     className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
                   />
+                  {errors.loanAmount && (
+                    <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                      {errors.loanAmount}
+                    </span>
+                  )}
+
                   <div className="flex">
                     <div className="flex-grow w-1/4 pr-2">
-                      <input
-                        name="phone"
-                        placeholder="Phone"
-                        disabled={response ? "disabled" : ""}
-                        onChange={handleInputChange}
-                        className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                      />
-                    </div>
-                    <div className="flex-grow ">
                       <select
                         name="yearEstablished"
                         onChange={handleInputChange}
                         id="yearEstablished"
-                        defaultValue={response ? formData.provider : ""}
+                        value={formData.yearEstablished}
+                        defaultValue={response ? formData.yearEstablished : ""}
                         disabled={response ? "disabled" : ""}
                         className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
                       >
                         <option value="">Year Started </option>
                         {yearOptions}
                       </select>
+                      {errors.yearEstablished && (
+                        <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                          {errors.yearEstablished}
+                        </span>
+                      )}
                     </div>
-                  </div>
-
-                  <div className="flex">
                     <div className="flex-grow w-1/4 pr-2">
-                      <input
-                        name="loanAmount"
-                        placeholder="Loan Amount"
-                        disabled={response ? "disabled" : ""}
-                        onChange={handleInputChange}
-                        className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                      />
-                    </div>
-                    <div className="flex-grow ">
                       <select
                         name="provider"
                         onChange={handleInputChange}
-                        id="countries"
+                        id="loanprovider"
+                        value={formData.provider}
                         defaultValue={response ? formData.provider : ""}
                         disabled={response ? "disabled" : ""}
                         className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
@@ -159,6 +206,11 @@ const LoanFormYellow = () => {
                         <option value="Xero">Xero</option>
                         <option value="MYOB">MYOB</option>
                       </select>
+                      {errors.provider && (
+                        <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                          {errors.provider}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -185,6 +237,16 @@ const LoanFormYellow = () => {
                       </svg>
                       {!response && (
                         <span className="pl-2 mx-1" onClick={formSubmitHandler}>
+                          Submit Application
+                        </span>
+                      )}
+                      {response && (
+                        <span className="pl-2 mx-1" onClick={formResetHandler}>
+                          Reset
+                        </span>
+                      )}
+                      {/* {!response && (
+                        <span className="pl-2 mx-1" onClick={formSubmitHandler}>
                           Request Balance Sheet
                         </span>
                       )}
@@ -192,11 +254,31 @@ const LoanFormYellow = () => {
                         <span className="pl-2 mx-1" onClick={formReviewHandler}>
                           Review
                         </span>
-                      )}
+                      )} */}
                     </button>
                   </div>
                 </div>
               </div>
+
+              {isLoading && (
+                <div className="mt-5 bg-white shadow cursor-pointer rounded-xl">
+                  <div className="flex">
+                    <div className="flex-1 py-5 pl-5 overflow-hidden">
+                      <div className="flex-1 py-5 pl-5 overflow-hidden">
+                        <div
+                          className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-warning motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                          role="status"
+                        >
+                          <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                            Loading...
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {finalresponse && (
                 <div className="mt-5 bg-white shadow cursor-pointer rounded-xl">
                   <div className="flex">
@@ -212,16 +294,15 @@ const LoanFormYellow = () => {
                           Business Name : {finalresponse.decision.businessName}
                         </li>
                         <li>
-                          Year Established :{" "}
+                          Year Established :
                           {finalresponse.decision.yearEstablished}
                         </li>
                         <li>
-                          Summary of Profit/Loss :{" "}
+                          Summary of Profit/Loss :
                           {finalresponse.decision.profitOrLossSum}
                         </li>
                         <li>
-                          Pre Assessment :{" "}
-                          {finalresponse.decision.preAssessment}%
+                          Pre Approval : {finalresponse.decision.preAssessment}%
                         </li>
                       </ul>
                     </div>

@@ -1,12 +1,10 @@
 import "./App.css";
-// import LoanEmailForm from "./Components/loanEmailForm";
-// import LoanForm from "./Components/loanForm";
-import LoanFormYellow from "./Components/loanFormYellow";
+import LoanForm from "./Components/LoanForm";
 
 function App() {
   return (
     <div className="App">
-      <LoanFormYellow />
+      <LoanForm />
     </div>
   );
 }

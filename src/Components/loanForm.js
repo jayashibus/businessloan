@@ -1,16 +1,19 @@
 import React, { useState } from "react";
+import { CONSTANTS } from "../Constant/constants";
+import Loading from "./Loading";
+import Result from "./Result";
 
-const LoanFormYellow = () => {
+const LoanForm = () => {
   const [response, setResponse] = useState(null);
+  const [finalresponse, setFinalresponse] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    bname: "",
+    businessName: "",
     provider: "",
-    lamount: "",
-    phone: "",
-    yearStarted: "",
+    loanAmount: "",
+    yearEstablished: "",
   });
 
   const currentYear = new Date().getFullYear();
@@ -33,36 +36,88 @@ const LoanFormYellow = () => {
     });
   };
 
-  const formSubmitHandler = async (event) => {
+  function formResetHandler(event) {
     event.preventDefault();
-    const response = await fetch("http://localhost:5032/api/balance-sheet", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
+    setFormData({
+      businessName: "",
+      provider: "",
+      loanAmount: "",
+      yearEstablished: "",
     });
-    const data = await response.json();
-    setResponse(data);
 
-    console.log(formData);
-    console.log(data);
+    setResponse(null);
+    setFinalresponse(null);
+    setErrors({});
+  }
+
+  const validateForm = (formData) => {
+    const { businessName, yearEstablished, loanAmount, provider } = formData;
+    let errorMessage = {};
+
+    if (!provider) {
+      errorMessage.provider = CONSTANTS.loanApplication.validationMsg.provider;
+    }
+    if (!businessName) {
+      errorMessage.businessName =
+        CONSTANTS.loanApplication.validationMsg.businessName;
+    }
+    if (!yearEstablished) {
+      errorMessage.yearEstablished =
+        CONSTANTS.loanApplication.validationMsg.yearEstablished;
+    }
+    if (!loanAmount) {
+      errorMessage.loanAmount =
+        CONSTANTS.loanApplication.validationMsg.loanAmount;
+    }
+
+    return errorMessage;
   };
 
-  const formReviewHandler = async (event) => {
+  const formSubmitHandler = async (event) => {
     event.preventDefault();
-    const response = await fetch("http://localhost:5032/api/loan-application", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-    const data = await response.json();
-    setResponse(data);
+    const errorMessage = validateForm(formData);
 
-    console.log(formData);
-    console.log(data);
+    if (Object.keys(errorMessage).length === 0) {
+      setErrors({});
+      // Handle form submission
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(
+          "http://localhost:5040/api/balance-sheet",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
+
+        const data = await response.json();
+        setResponse(data);
+
+        const response1 = await fetch(
+          "http://localhost:5040/api/loan-application",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          }
+        );
+
+        const data1 = await response1.json();
+        setFinalresponse(data1);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setErrors(errorMessage);
+    }
   };
   return (
     <div>
@@ -78,79 +133,78 @@ const LoanFormYellow = () => {
                     </h1>
                   </div>
                 </div>
-                <div className="px-5 pb-5">
-                  <input
-                    placeholder="Name"
-                    onChange={handleInputChange}
-                    name="name"
-                    disabled={response ? "disabled" : ""}
-                    className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                  />
-                  <input
-                    placeholder="Email"
-                    name="email"
-                    onChange={handleInputChange}
-                    disabled={response ? "disabled" : ""}
-                    className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                  />
-                  <input
-                    placeholder="Business Name"
-                    name="bname"
-                    onChange={handleInputChange}
-                    disabled={response ? "disabled" : ""}
-                    className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                  />
-                  <div className="flex">
-                    <div className="flex-grow w-1/4 pr-2">
-                      <input
-                        name="phone"
-                        placeholder="Phone"
-                        disabled={response ? "disabled" : ""}
-                        onChange={handleInputChange}
-                        className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                      />
-                    </div>
-                    <div className="flex-grow ">
-                      <select
-                        name="yearStarted"
-                        onChange={handleInputChange}
-                        id="yearStarted"
-                        defaultValue={response ? formData.provider : ""}
-                        disabled={response ? "disabled" : ""}
-                        className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                      >
-                        <option value="">Year Started </option>
-                        {yearOptions}
-                      </select>
-                    </div>
-                  </div>
+                <form data-testid="loan-form">
+                  <div className="px-5 pb-5">
+                    <input
+                      placeholder="Business Name"
+                      name="businessName"
+                      onChange={handleInputChange}
+                      disabled={response ? "disabled" : ""}
+                      value={formData.businessName}
+                      className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400 "
+                    />
+                    {errors.businessName && (
+                      <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                        {errors.businessName}
+                      </span>
+                    )}
 
-                  <div className="flex">
-                    <div className="flex-grow w-1/4 pr-2">
-                      <input
-                        name="lamount"
-                        placeholder="Loan Amount"
-                        disabled={response ? "disabled" : ""}
-                        onChange={handleInputChange}
-                        className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                      />
-                    </div>
-                    <div className="flex-grow ">
-                      <select
-                        name="provider"
-                        onChange={handleInputChange}
-                        id="countries"
-                        defaultValue={response ? formData.provider : ""}
-                        disabled={response ? "disabled" : ""}
-                        className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
-                      >
-                        <option value="">Choose a Provider</option>
-                        <option value="Xero">Xero</option>
-                        <option value="MYOB">MYOB</option>
-                      </select>
+                    <input
+                      type="number"
+                      name="loanAmount"
+                      placeholder="Loan Amount"
+                      disabled={response ? "disabled" : ""}
+                      onChange={handleInputChange}
+                      value={formData.loanAmount}
+                      className=" text-black placeholder-gray-600 w-full px-4 py-2.5 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
+                    />
+                    {errors.loanAmount && (
+                      <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                        {errors.loanAmount}
+                      </span>
+                    )}
+
+                    <div className="flex">
+                      <div className="flex-grow w-1/4 pr-2">
+                        <select
+                          name="yearEstablished"
+                          onChange={handleInputChange}
+                          id="yearEstablished"
+                          value={formData.yearEstablished}
+                          disabled={response ? "disabled" : ""}
+                          className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
+                        >
+                          <option value="">Year Started </option>
+                          {yearOptions}
+                        </select>
+                        {errors.yearEstablished && (
+                          <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                            {errors.yearEstablished}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-grow w-1/4 pr-2">
+                        <select
+                          name="provider"
+                          onChange={handleInputChange}
+                          id="select"
+                          value={formData.provider}
+                          disabled={response ? "disabled" : ""}
+                          className=" text-black placeholder-gray-600 w-full px-4 py-3 mt-2 text-base   transition duration-500 ease-in-out transform border-transparent rounded-lg bg-gray-200  focus:border-blueGray-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:shadow-outline focus:ring-2 ring-offset-current ring-offset-2 ring-gray-400"
+                        >
+                          <option value="">Choose a Provider</option>
+                          <option value="Xero">Xero</option>
+                          <option value="MYOB">MYOB</option>
+                        </select>
+                        {errors.provider && (
+                          <span className="flex items-center font-medium tracking-wide text-red-500 text-xs mt-1 ml-1">
+                            {errors.provider}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </form>
 
                 <div className="flex flex-row-reverse p-3">
                   <div className="flex-initial pl-3">
@@ -174,64 +228,23 @@ const LoanFormYellow = () => {
                       </svg>
                       {!response && (
                         <span className="pl-2 mx-1" onClick={formSubmitHandler}>
-                          Request Balance Sheet
+                          {CONSTANTS.loanApplication.button.submitButton}
                         </span>
                       )}
                       {response && (
-                        <span className="pl-2 mx-1" onClick={formReviewHandler}>
-                          Review
+                        <span className="pl-2 mx-1" onClick={formResetHandler}>
+                          {CONSTANTS.loanApplication.button.resetButton}
                         </span>
                       )}
                     </button>
                   </div>
                 </div>
               </div>
-              {response && (
-                <div className="mt-5 bg-white shadow cursor-pointer rounded-xl">
-                  <div className="flex">
-                    <div className="flex-1 py-5 pl-5 overflow-hidden">
-                      <ul>
-                        <li className="text-xs text-gray-600 uppercase ">
-                          Receiver
-                        </li>
-                        <li>Max Mustermann</li>
-                        <li>Musterstrasse 1</li>
-                        <li>4020 Linz</li>
-                      </ul>
-                    </div>
-                    <div className="flex-1 py-5 pl-1 overflow-hidden">
-                      <ul>
-                        <li className="text-xs text-gray-600 uppercase">
-                          Sender
-                        </li>
-                        <li>Rick Astley</li>
-                        <li>Rickrolled 11</li>
-                        <li>1000 Vienna</li>
-                      </ul>
-                    </div>
-                    <div className="flex-none pt-2.5 pr-2.5 pl-1">
-                      <button
-                        type="button"
-                        className="px-2 py-2 font-medium tracking-wide text-black capitalize transition duration-300 ease-in-out transform rounded-xl hover:bg-gray-300 focus:outline-none active:scale-95"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          height="24px"
-                          viewBox="0 0 24 24"
-                          width="24px"
-                          fill="#000000"
-                        >
-                          <path d="M0 0h24v24H0V0z" fill="none"></path>
-                          <path
-                            d="M5 18.08V19h.92l9.06-9.06-.92-.92z"
-                            opacity=".3"
-                          ></path>
-                          <path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29s-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83zM3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM5.92 19H5v-.92l9.06-9.06.92.92L5.92 19z"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+
+              {isLoading && <Loading />}
+
+              {finalresponse && (
+                <Result finalresponse={finalresponse.decision} />
               )}
             </div>
           </div>
@@ -241,4 +254,4 @@ const LoanFormYellow = () => {
   );
 };
 
-export default LoanFormYellow;
+export default LoanForm;

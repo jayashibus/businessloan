@@ -15,6 +15,10 @@ const Result = ({ finalresponse }) => {
             <li>Business Name : {finalresponse.businessName}</li>
             <li>Year Established :{finalresponse.yearEstablished}</li>
             <li>Summary of Profit/Loss :{finalresponse.profitOrLossSum}</li>
+            <li>
+              Average Asset Value :
+              {Math.round(finalresponse.averageAssetsValue)}
+            </li>
             <li>Pre Approval : {finalresponse.preAssessment}%</li>
           </ul>
         </div>

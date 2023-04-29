@@ -82,39 +82,33 @@ const LoanForm = () => {
       // Handle form submission
       setIsLoading(true);
 
-      try {
-        const response = await fetch(
-          "http://localhost:5040/api/balance-sheet",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          }
-        );
-
-        const data = await response.json();
-        setResponse(data);
-
-        const response1 = await fetch(
-          "http://localhost:5040/api/loan-application",
-          {
+      fetch("http://localhost:5040/api/balance-sheet", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setResponse(data);
+          return fetch("http://localhost:5040/api/loan-application", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify(data),
-          }
-        );
-
-        const data1 = await response1.json();
-        setFinalresponse(data1);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
+          });
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          setFinalresponse(data);
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          setIsLoading(false);
+        });
     } else {
       setErrors(errorMessage);
     }
